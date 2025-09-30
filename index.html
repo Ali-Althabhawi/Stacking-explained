@@ -19,7 +19,7 @@
 </head>
 <body>
   <h1>Stacking (stacked generalization) — Explained</h1>
-  <p class="lead">A concise, semi-formal explanation of stacking: what it is, how it works, and why people use it. This page is intentionally conceptual — no code — and includes short definitions and a simple diagram.</p>
+  
 
   <section class="card">
     <h2>Intro — what is stacking?</h2>
@@ -28,7 +28,7 @@
 
   <section class="card" style="margin-top:12px">
     <h2>Quick explanation</h2>
-    <p>At a high level, stacking trains several different models on the same problem. Instead of using the raw features directly, a second-level model (the meta-model) is trained on the base models’ predictions. The meta-model learns to correct or weight those predictions to produce the final result.</p>
+    <p>At a high level, stacking starts by training several different base models on the same training set. Each base model makes its own predictions. A separate combining model — the meta-model — then learns how to use those base-model predictions to produce a single final prediction. In other words: first get a set of diverse predictions, then learn how to combine them well.</p>
   </section>
 
   <section class="card" style="margin-top:12px">
@@ -84,41 +84,19 @@
     </div>
   </section>
 
+  
+
+
   <section class="card" style="margin-top:12px">
-    <h2>How stacking works (step-by-step)</h2>
+    <h2>How stacking works</h2>
+    <p>Briefly, stacking proceeds in a few clear stages:</p>
     <ol>
-      <li>Start with labeled training data (features + target).</li>
-      <li>Train the base models. Base models are typically trained on the original dataset and used to produce predictions.</li>
-      <li>Collect those out-of-fold base predictions — they become the meta-features for the meta-model.</li>
-      <li>Train the meta-model on those meta-features (the target remains the same).</li>
-      <li>For final deployment, either retrain each base model on the full training set and use the meta-model to combine their predictions, or keep the K fold-trained base models and ensemble them at inference (more compute but sometimes slightly better performance).</li>
+      <li>Train several base models on the available training data; each model makes its own predictions.</li>
+      <li>Use those base-model predictions as inputs to a meta-model that learns how to combine them into a final prediction.</li>
+      <li>For deployment, a common approach is to train each base model on the full training set and let the meta-model produce the final output.</li>
     </ol>
-  </section>
 
-  <section class="card" style="margin-top:12px">
-    <h2>Common model types (examples)</h2>
-    <p>Here are common model families you might use as base models in a stacking setup, and a brief note on what they look for in data:</p>
-    <ul>
-      <li><strong>Linear models</strong> (e.g., linear regression, logistic regression): assume a linear relationship between inputs and output; simple and fast, good baseline.</li>
-      <li><strong>Decision trees</strong>: partition the feature space with axis-aligned splits; capture non-linear interactions and are easy to interpret at a local level.</li>
-      <li><strong>Ensembles of trees</strong> (e.g., Random Forest, Gradient Boosting): combine many trees for strong predictive performance; often a strong choice for tabular data.</li>
-      <li><strong>k-Nearest Neighbors (k-NN)</strong>: predict based on nearby training examples; non-parametric and simple, but can be slow at inference for large datasets.</li>
-      <li><strong>Support Vector Machines (SVM)</strong>: find a margin-maximizing boundary; effective in high-dimensional spaces and with kernels for non-linear separation.</li>
-      <li><strong>Neural networks</strong>: flexible function approximators that learn layered representations; can model complex patterns but need more data and tuning.</li>
-    </ul>
-  </section>
-
-  <section class="card" style="margin-top:12px">
-    <h2>Resources</h2>
-    <p>These pages were helpful while preparing this summary:</p>
-    <ul>
-      <li><a href="https://www.geeksforgeeks.org/machine-learning/stacking-in-machine-learning/" target="_blank" rel="noopener">GeeksforGeeks — Stacking in Machine Learning</a></li>
-      <li><a href="https://medium.com/@brijesh_soni/stacking-to-improve-model-performance-a-comprehensive-guide-on-ensemble-learning-in-python-9ed53c93ce28" target="_blank" rel="noopener">Medium — Stacking to improve model performance (guide)</a></li>
-    </ul>
-  </section>
-
-  <section class="card" style="margin-top:12px">
-    <h2>Definitions and examples</h2>
+    <h2 style="margin-top:16px">Definitions and examples</h2>
     <dl>
       <dt>Ensemble</dt>
       <dd>A technique that combines multiple individual models to produce a single, generally more accurate model. Example: a voting ensemble where three classifiers vote on a class and the majority vote is taken.</dd>
@@ -150,8 +128,28 @@
     </ul>
   </section>
 
-  <footer>
-    <p>This page aims for a clear, conceptual explanation of stacking — the two-layer idea, common model types, and basic tradeoffs. If you want a shorter summary, extra visuals, or a small FAQ, tell me which and I’ll draft that next.</p>
-  </footer>
+  <section class="card" style="margin-top:12px">
+    <h2>Common model types (examples)</h2>
+    <p>Here are common model families you might use as base models in a stacking setup, and a brief note on what they look for in data:</p>
+    <ul>
+      <li><strong>Linear models</strong> (e.g., linear regression, logistic regression): assume a linear relationship between inputs and output; simple and fast, good baseline.</li>
+      <li><strong>Decision trees</strong>: partition the feature space with axis-aligned splits; capture non-linear interactions and are easy to interpret at a local level.</li>
+      <li><strong>Ensembles of trees</strong> (e.g., Random Forest, Gradient Boosting): combine many trees for strong predictive performance; often a strong choice for tabular data.</li>
+      <li><strong>k-Nearest Neighbors (k-NN)</strong>: predict based on nearby training examples; non-parametric and simple, but can be slow at inference for large datasets.</li>
+      <li><strong>Support Vector Machines (SVM)</strong>: find a margin-maximizing boundary; effective in high-dimensional spaces and with kernels for non-linear separation.</li>
+      <li><strong>Neural networks</strong>: flexible function approximators that learn layered representations; can model complex patterns but need more data and tuning.</li>
+    </ul>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Resources</h2>
+    <p>These pages were helpful while preparing this summary:</p>
+    <ul>
+      <li><a href="https://www.geeksforgeeks.org/machine-learning/stacking-in-machine-learning/" target="_blank" rel="noopener">GeeksforGeeks — Stacking in Machine Learning</a></li>
+      <li><a href="https://medium.com/@brijesh_soni/stacking-to-improve-model-performance-a-comprehensive-guide-on-ensemble-learning-in-python-9ed53c93ce28" target="_blank" rel="noopener">Medium — Stacking to improve model performance (guide)</a></li>
+    </ul>
+  </section>
+
+  
 </body>
 </html>
