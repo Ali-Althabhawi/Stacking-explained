@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stacking — Explained</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; line-height: 1.5; color: #111; padding: 28px; max-width: 900px; margin: auto; }
+    h1, h2 { color: #0b4; }
+    h1 { margin-top: 6px; }
+    .lead { color: #333; margin-bottom: 18px; }
+    .card { border: 1px solid #e6e6e6; padding: 14px; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .diagram { text-align: center; margin: 18px 0; }
+    pre.definition { background: #fafafa; padding: 10px; border-radius: 6px; overflow: auto; }
+    dl dt { font-weight: 700; margin-top: 10px; }
+    ul { margin-top: 6px; }
+    footer { color: #666; font-size: 14px; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <h1>Stacking (stacked generalization) — Explained</h1>
+  <p class="lead">A concise, semi-formal explanation of stacking: what it is, how it works, and why people use it. This page is intentionally conceptual — no code — and includes short definitions and a simple diagram.</p>
+
+  <section class="card">
+    <h2>Intro — what is stacking?</h2>
+    <p>Stacking (short for stacked generalization) is an ensemble learning technique that combines the predictions of multiple base models with a final model called a <strong>meta-model</strong>. The meta-model learns how to best combine the base models’ outputs so the overall system is more accurate and robust than any single base model.</p>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Quick explanation</h2>
+    <p>At a high level, stacking trains several different models on the same problem. Instead of using the raw features directly, a second-level model (the meta-model) is trained on the base models’ predictions. The meta-model learns to correct or weight those predictions to produce the final result.</p>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Stacking design</h2>
+    <p>The architecture typically has two layers:</p>
+    <ol>
+      <li><strong>Base models (Level 0)</strong>: multiple individual learners trained on the original dataset. Examples: decision trees, logistic regression, random forests, k-nearest neighbors, and others.</li>
+      <li><strong>Meta-model (Level 1)</strong>: a single model trained on the base models’ predictions (often called meta-features). Common choices for the meta-model are simple learners like linear or logistic regression, but any learner that suits the problem can be used.</li>
+    </ol>
+
+    <div class="diagram">
+      <h3>Figure 1 — Simple stacking diagram</h3>
+      <!-- Simple SVG diagram of stacking -->
+      <svg width="600" height="230" viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stacking diagram">
+        <!-- training dataset -->
+        <rect x="20" y="18" width="170" height="40" rx="6" fill="#f3f8ff" stroke="#cfe0ff" />
+        <text x="30" y="44" font-family="sans-serif" font-size="13" fill="#033">Training dataset</text>
+
+        <!-- base models -->
+        <rect x="220" y="6" width="110" height="40" rx="6" fill="#fff6f3" stroke="#ffd7c2"/>
+        <text x="231" y="30" font-family="sans-serif" font-size="12">Base model A</text>
+        <rect x="220" y="66" width="110" height="40" rx="6" fill="#f6fff4" stroke="#c7f3cf"/>
+        <text x="231" y="90" font-family="sans-serif" font-size="12">Base model B</text>
+        <rect x="220" y="126" width="110" height="40" rx="6" fill="#fff9f6" stroke="#ffe6c9"/>
+        <text x="231" y="150" font-family="sans-serif" font-size="12">Base model C</text>
+
+        <!-- arrows from dataset to base models -->
+        <line x1="190" y1="38" x2="220" y2="26" stroke="#888" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <line x1="190" y1="38" x2="220" y2="86" stroke="#888" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <line x1="190" y1="38" x2="220" y2="146" stroke="#888" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+        <!-- meta model -->
+        <rect x="420" y="78" width="130" height="48" rx="8" fill="#eefaff" stroke="#c6e9ff"/>
+        <text x="435" y="105" font-family="sans-serif" font-size="13">Meta-model</text>
+
+        <!-- arrows from base models to meta-model -->
+        <line x1="330" y1="26" x2="420" y2="102" stroke="#444" stroke-width="1.4" marker-end="url(#arrow)"/>
+        <line x1="330" y1="86" x2="420" y2="102" stroke="#444" stroke-width="1.4" marker-end="url(#arrow)"/>
+        <line x1="330" y1="146" x2="420" y2="102" stroke="#444" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+        <!-- final prediction -->
+        <rect x="560" y="78" width="30" height="48" rx="6" fill="#fff" stroke="#ddd"/>
+        <text x="568" y="105" font-family="sans-serif" font-size="11">Output</text>
+        <line x1="550" y1="102" x2="560" y2="102" stroke="#444" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <defs>
+          <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6" fill="#444" />
+          </marker>
+        </defs>
+      </svg>
+  <p style="font-size:13px;color:#555;">Note: the diagram shows the high-level flow from base models to the meta-model. See the sections below for training and deployment details.</p>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>How stacking works (step-by-step)</h2>
+    <ol>
+      <li>Start with labeled training data (features + target).</li>
+      <li>Train the base models. Base models are typically trained on the original dataset and used to produce predictions.</li>
+      <li>Collect those out-of-fold base predictions — they become the meta-features for the meta-model.</li>
+      <li>Train the meta-model on those meta-features (the target remains the same).</li>
+      <li>For final deployment, either retrain each base model on the full training set and use the meta-model to combine their predictions, or keep the K fold-trained base models and ensemble them at inference (more compute but sometimes slightly better performance).</li>
+    </ol>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Common model types (examples)</h2>
+    <p>Here are common model families you might use as base models in a stacking setup, and a brief note on what they look for in data:</p>
+    <ul>
+      <li><strong>Linear models</strong> (e.g., linear regression, logistic regression): assume a linear relationship between inputs and output; simple and fast, good baseline.</li>
+      <li><strong>Decision trees</strong>: partition the feature space with axis-aligned splits; capture non-linear interactions and are easy to interpret at a local level.</li>
+      <li><strong>Ensembles of trees</strong> (e.g., Random Forest, Gradient Boosting): combine many trees for strong predictive performance; often a strong choice for tabular data.</li>
+      <li><strong>k-Nearest Neighbors (k-NN)</strong>: predict based on nearby training examples; non-parametric and simple, but can be slow at inference for large datasets.</li>
+      <li><strong>Support Vector Machines (SVM)</strong>: find a margin-maximizing boundary; effective in high-dimensional spaces and with kernels for non-linear separation.</li>
+      <li><strong>Neural networks</strong>: flexible function approximators that learn layered representations; can model complex patterns but need more data and tuning.</li>
+    </ul>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Resources</h2>
+    <p>These pages were helpful while preparing this summary:</p>
+    <ul>
+      <li><a href="https://www.geeksforgeeks.org/machine-learning/stacking-in-machine-learning/" target="_blank" rel="noopener">GeeksforGeeks — Stacking in Machine Learning</a></li>
+      <li><a href="https://medium.com/@brijesh_soni/stacking-to-improve-model-performance-a-comprehensive-guide-on-ensemble-learning-in-python-9ed53c93ce28" target="_blank" rel="noopener">Medium — Stacking to improve model performance (guide)</a></li>
+    </ul>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Definitions and examples</h2>
+    <dl>
+      <dt>Ensemble</dt>
+      <dd>A technique that combines multiple individual models to produce a single, generally more accurate model. Example: a voting ensemble where three classifiers vote on a class and the majority vote is taken.</dd>
+
+      <dt>Model</dt>
+      <dd>A model is a function learned from data that maps inputs to predictions. Typically you split data into training and test sets (for example 80/20). You use the training data to fit a model (e.g., a decision tree, a linear equation, or a neural network). After training, the model takes new inputs and produces predicted outputs.</dd>
+    </dl>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Advantages of stacking</h2>
+    <ul>
+      <li><strong>Better performance</strong>: combining models often increases accuracy and reliability.</li>
+      <li><strong>Combines different strengths</strong>: you can mix diverse model types so their different biases complement each other.</li>
+      <li><strong>Reduces overfitting</strong>: when done with proper cross-validation, stacking can reduce overfitting versus relying on a single model.</li>
+      <li><strong>Learns from mistakes</strong>: the meta-model can learn where certain base models systematically err and correct them.</li>
+      <li><strong>Customizable</strong>: you can choose base and meta-models to suit the dataset and problem.</li>
+    </ul>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2>Limitations of stacking</h2>
+    <ul>
+      <li><strong>Implementation complexity</strong>: stacking requires more careful setup than single-model approaches and some other ensemble methods.</li>
+      <li><strong>Slower training</strong>: multiple base models plus a meta-model increases compute and training time.</li>
+      <li><strong>Harder to interpret</strong>: the final prediction comes from several models, which can make explanations more difficult.</li>
+      <li><strong>Risk of overfitting</strong>: if the meta-model is too flexible or if data leakage occurs, stacking can overfit.</li>
+      <li><strong>Needs more data</strong>: it benefits from more data, especially because both base and meta-models need training examples.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>This page aims for a clear, conceptual explanation of stacking — the two-layer idea, common model types, and basic tradeoffs. If you want a shorter summary, extra visuals, or a small FAQ, tell me which and I’ll draft that next.</p>
+  </footer>
+</body>
+</html>
