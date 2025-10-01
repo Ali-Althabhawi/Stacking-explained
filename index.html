@@ -18,13 +18,15 @@
   </style>
 </head>
 <body>
-  <h1>Stacking (stacked generalization) — Explained</h1>
+  <h1>Stacking — Explained</h1>
   
 
   <section class="card">
     <h2>Intro — what is stacking?</h2>
-    <p>Stacking (short for stacked generalization) is an ensemble learning technique that combines the predictions of multiple base models with a final model called a <strong>meta-model</strong>. The meta-model learns how to best combine the base models’ outputs so the overall system is more accurate and robust than any single base model.</p>
+  <p>Stacking is an <a href="#ensemble">ensemble</a> learning technique that combines the predictions of multiple <a href="#model">models</a> with a final model called a <strong>meta-model</strong>. The meta-model learns how to best combine the models’ outputs so the overall system is more accurate and robust than any single model.</p>
   </section>
+
+  <!-- examples removed from top; visuals will live directly under definitions below -->
 
   <section class="card" style="margin-top:12px">
     <h2>Quick explanation</h2>
@@ -98,11 +100,144 @@
 
     <h2 style="margin-top:16px">Definitions and examples</h2>
     <dl>
-      <dt>Ensemble</dt>
-      <dd>A technique that combines multiple individual models to produce a single, generally more accurate model. Example: a voting ensemble where three classifiers vote on a class and the majority vote is taken.</dd>
+  <dt id="ensemble">Ensemble</dt>
+      <dd>
+        A method that combines the outputs from multiple runs of the same model (the same algorithm) to produce a single prediction that is usually more reliable than any single run. Running the same algorithm multiple times with different random seeds, data samples, or hyperparameters produces slightly different models; combining their outputs (by averaging or voting) reduces random errors and variance. Example: Random Forest trains many decision trees on different random samples and averages their predictions.
+      </dd>
+        <div style="margin-top:8px; text-align:center;">
+          <!-- Ensemble: two-panel showing model1 + model2 => averaged model3 -->
+          <svg width="520" height="120" viewBox="0 0 520 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="520" height="120" fill="#fff" stroke="#f6f6f6"/>
+            <!-- left panel: model A and model B overlays -->
+            <g transform="translate(10,10)">
+              <rect x="0" y="0" width="180" height="90" fill="#fff" stroke="#eee"/>
+              <!-- data points -->
+              <g fill="#c44">
+                <circle cx="18" cy="72" r="2.8" />
+                <circle cx="48" cy="58" r="2.8" />
+                <circle cx="78" cy="46" r="2.8" />
+                <circle cx="108" cy="38" r="2.8" />
+                <circle cx="138" cy="30" r="2.8" />
+                <circle cx="168" cy="24" r="2.8" />
+              </g>
+              <!-- model 1 line -->
+              <path d="M12,76 C40,60 70,48 100,38 C130,30 160,26 172,24" stroke="#4a90e2" stroke-width="2.5" fill="none"/>
+              <!-- model 2 line -->
+              <path d="M12,74 C40,62 70,50 100,44 C130,36 160,28 172,26" stroke="#7ed321" stroke-width="2.5" fill="none"/>
+              <text x="90" y="106" font-size="11" text-anchor="middle" fill="#333">Model A + Model B (overlay)</text>
+            </g>
 
-      <dt>Model</dt>
+            <!-- arrow to averaged panel -->
+            <g transform="translate(200,44)">
+              <path d="M0,4 L40,4" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+              <text x="20" y="-6" font-size="11" text-anchor="middle" fill="#666">average →</text>
+            </g>
+
+            <!-- right panel: averaged result -->
+            <g transform="translate(260,10)">
+              <rect x="0" y="0" width="180" height="90" fill="#fff" stroke="#eee"/>
+              <!-- same data points -->
+              <g fill="#c44">
+                <circle cx="18" cy="72" r="2.8" />
+                <circle cx="48" cy="58" r="2.8" />
+                <circle cx="78" cy="46" r="2.8" />
+                <circle cx="108" cy="38" r="2.8" />
+                <circle cx="138" cy="30" r="2.8" />
+                <circle cx="168" cy="24" r="2.8" />
+              </g>
+              <!-- averaged line (simple mean of the two) -->
+              <path d="M12,75 C40,61 70,49 100,41 C130,33 160,27 172,25" stroke="#333" stroke-width="2.8" fill="none"/>
+              <text x="90" y="106" font-size="11" text-anchor="middle" fill="#333">Averaged result (Model C)</text>
+            </g>
+
+            <defs>
+              <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6" fill="#666" />
+              </marker>
+            </defs>
+          </svg>
+        </div>
+
+  <dt id="model">Model</dt>
       <dd>A model is a function learned from data that maps inputs to predictions. Typically you split data into training and test sets (for example 80/20). You use the training data to fit a model (e.g., a decision tree, a linear equation, or a neural network). After training, the model takes new inputs and produces predicted outputs.</dd>
+      <div style="margin-top:8px; text-align:center;">
+          <svg width="320" height="90" viewBox="0 0 320 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="320" height="90" fill="#fff" stroke="#f0f0f0"/>
+            <g transform="translate(12,10)">
+              <!-- scatter plot -->
+              <g>
+                <rect x="0" y="0" width="120" height="60" fill="#fff" stroke="#eee"/>
+                <circle cx="12" cy="48" r="2.5" fill="#c44"/>
+                <circle cx="36" cy="38" r="2.5" fill="#c44"/>
+                <circle cx="60" cy="28" r="2.5" fill="#c44"/>
+                <circle cx="84" cy="22" r="2.5" fill="#c44"/>
+                <polyline points="6,50 30,40 54,30 78,24" fill="none" stroke="#257" stroke-width="2"/>
+              </g>
+              <!-- arrow -->
+              <g transform="translate(136,22)">
+                <polygon points="0,6 12,0 12,12" fill="#888"/>
+              </g>
+              <!-- model box -->
+              <g transform="translate(156,8)">
+                <rect x="0" y="0" width="120" height="44" rx="6" fill="#eefaff" stroke="#c6e9ff"/>
+                <text x="60" y="26" font-size="12" fill="#033" text-anchor="middle">Model</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+      <dt>Meta-model</dt>
+      <dd>The model that learns to combine other models' outputs into the final prediction in a stacking setup.</dd>
+      <!-- Visual omitted here; see Figure 1 above for the stacking diagram -->
+
+      
+
+      <dt>Overfitting</dt>
+      <dd>When a model fits the training data too closely — for example a jagged curve that passes through every point instead of a smooth curve that captures the general trend. An overfitted model performs well on training data but poorly on new data because it learned noise instead of the underlying pattern.</dd>
+      <div style="margin-top:8px; text-align:center;">
+        <div style="margin-top:8px; text-align:center; display:flex; gap:18px; justify-content:center;">
+          <!-- Restored original two overfitting graphs side-by-side -->
+          <div style="text-align:center;">
+            <svg width="220" height="120" viewBox="0 0 220 120" xmlns="http://www.w3.org/2000/svg">
+              <rect width="220" height="120" fill="#fff" stroke="#eee"/>
+              <g fill="#c44">
+                <circle cx="25" cy="90" r="3" />
+                <circle cx="55" cy="75" r="3" />
+                <circle cx="85" cy="60" r="3" />
+                <circle cx="115" cy="50" r="3" />
+                <circle cx="145" cy="40" r="3" />
+                <circle cx="175" cy="30" r="3" />
+              </g>
+              <path d="M20,95 C50,80 90,60 120,48 C150,36 190,28 200,25" stroke="#257" stroke-width="2.5" fill="none" />
+              <text x="110" y="112" font-size="11" text-anchor="middle" fill="#333">Normal (smooth)</text>
+            </svg>
+          </div>
+
+          <div style="text-align:center;">
+            <svg width="220" height="120" viewBox="0 0 220 120" xmlns="http://www.w3.org/2000/svg">
+              <rect width="220" height="120" fill="#fff" stroke="#eee"/>
+              <g fill="#c44">
+                <circle cx="25" cy="90" r="3" />
+                <circle cx="55" cy="75" r="3" />
+                <circle cx="85" cy="60" r="3" />
+                <circle cx="115" cy="50" r="3" />
+                <circle cx="145" cy="40" r="3" />
+                <circle cx="175" cy="30" r="3" />
+              </g>
+              <path d="M20,95 C30,92 40,70 55,76 C70,82 82,68 92,60 C102,52 110,62 118,46 C126,30 140,44 150,36 C160,28 180,26 200,25" stroke="#b02" stroke-width="2.5" fill="none" />
+              <text x="110" y="112" font-size="11" text-anchor="middle" fill="#333">Overfit (jagged)</text>
+            </svg>
+          </div>
+        </div>
+
+      <dt>Bagging</dt>
+      <dd>Bootstrap aggregating: training the same algorithm multiple times on different random samples and averaging the results (e.g., Random Forest).</dd>
+
+      <dt>Boosting</dt>
+      <dd>Sequentially building models where each new model focuses on correcting errors from the previous ones (e.g., AdaBoost, Gradient Boosting).</dd>
+
+      <dt>Voting / Averaging</dt>
+      <dd>Simple ensemble strategies: voting picks the majority class among classifiers; averaging combines numeric predictions or probabilities.</dd>
     </dl>
   </section>
 
@@ -111,7 +246,7 @@
     <ul>
       <li><strong>Better performance</strong>: combining models often increases accuracy and reliability.</li>
       <li><strong>Combines different strengths</strong>: you can mix diverse model types so their different biases complement each other.</li>
-      <li><strong>Reduces overfitting</strong>: when done with proper cross-validation, stacking can reduce overfitting versus relying on a single model.</li>
+  <li><strong>Reduces overfitting</strong>: combining multiple models can help balance errors and reduce overfitting compared to relying on a single model.</li>
       <li><strong>Learns from mistakes</strong>: the meta-model can learn where certain base models systematically err and correct them.</li>
       <li><strong>Customizable</strong>: you can choose base and meta-models to suit the dataset and problem.</li>
     </ul>
